@@ -13,6 +13,6 @@ class TodoListRepository extends BaseRepository implements TodoListRepositoryInt
 
     public function getAllContentInTheListByListID($list_id)
     {
-        return $this->model->where(['list_id', $list_id])->get();
+        return $this->model->where('list_id', '=', $list_id)->get();
     }
 }
