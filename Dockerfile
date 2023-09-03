@@ -2,7 +2,10 @@ FROM php:8-fpm
 
 # Copy composer.lock and composer.json
 COPY composer.lock composer.json /var/www/
+ADD https://github.com/mlocati/docker-php-extension-installer/releases/latest/download/install-php-extensions /usr/local/bin/
 
+RUN chmod +x /usr/local/bin/install-php-extensions && \
+    install-php-extensions apcu bcmath bz2 calendar core ctype curl date dom exif fileinfo filter ftp gd gettext gmp igbinary pcntl intl pdo_mysql pdo_pgsql pgsql sysvmsg sysvsem sysvshm ldap mysqli rdkafka soap sockets soap zip wddx opcache xsl shmop msgpack memcached
 # Set working directory
 WORKDIR /var/www
 
