@@ -1,26 +1,39 @@
 version: '3'
 services:
-  #Nginx Service
+  
+  #PHP Service
   app:
-    image: wyveo/nginx-php-fpm:php81
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: digitalocean.com/php
+    container_name: app
+    restart: unless-stopped
+    tty: true
+    environment:
+      SERVICE_NAME: app
+      SERVICE_TAGS: dev
+    working_dir: /var/www
+    volumes:
+      - ./:/var/www
+      - ./php/local.ini:/usr/local/etc/php/conf.d/local.ini
+    networks:
+      - app-network
+
+  #Nginx Service
+  webserver:
+    image: nginx:alpine
     container_name: webserver
     restart: unless-stopped
     tty: true
     ports:
       - "80:80"
       - "443:443"
-    environment:
-      - DB_HOST=mysqldb
-      - DB_PORT=3306
-      - DB_USERNAME=root
-      - DB_PASSWORD=root
-      - DB_DATABASE=todolist
-    working_dir: /var/www/html
+    volumes:
+      - ./:/var/www
+      - ./nginx/conf.d/:/etc/nginx/conf.d/
     networks:
       - app-network
-    volumes:
-     - ./:/var/www
-     - ./nginx/conf.d/:/etc/nginx/conf.d/
 
   #MySQL Service
   db:
@@ -31,22 +44,20 @@ services:
     ports:
       - "3306:3306"
     environment:
-      MYSQL_DATABASE: todolist
-      MYSQL_ROOT_PASSWORD: 
+      MYSQL_DATABASE: laravel
+      MYSQL_ROOT_PASSWORD: your_mysql_root_password
       SERVICE_TAGS: dev
       SERVICE_NAME: mysql
     volumes:
-      - dbdata: /var/lib/mysql
+      - dbdata:/var/lib/mysql/
       - ./mysql/my.cnf:/etc/mysql/my.cnf
     networks:
       - app-network
-
 
 #Docker Networks
 networks:
   app-network:
     driver: bridge
-
 #Volumes
 volumes:
   dbdata:
