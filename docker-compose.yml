@@ -1,29 +1,53 @@
-version: '2'
-
+version: '3'
 services:
-  mysqldb:
-    container_name: ddd-mysql
-    image: mysql
-    environment:
-      - MYSQL_ROOT_PASSWORD=root
-#      - ALLOW_EMPTY_PASSWORD=yes
-    ports:
-      - '3307:3306'
-    volumes:
-      - './datadir:/var/lib/mysql'
-  myapp:
-    container_name: ddd-app
+  #Nginx Service
+  app:
     image: wyveo/nginx-php-fpm:php81
+    container_name: webserver
+    restart: unless-stopped
+    tty: true
     ports:
-      - '8000:80'
+      - "80:80"
+      - "443:443"
     environment:
       - DB_HOST=mysqldb
       - DB_PORT=3306
       - DB_USERNAME=root
-      - DB_PASSWORD=
+      - DB_PASSWORD=root
       - DB_DATABASE=todolist
+    working_dir: /var/www/html
+    networks:
+      - app-network
     volumes:
-      - './:/docker-compose/webapp'
-      - './ddd-app.conf:/etc/nginx/conf.d/ddd-app.conf'
-    depends_on:
-      - mysqldb
+     - ./:/var/www
+     - ./nginx/conf.d/:/etc/nginx/conf.d/
+
+  #MySQL Service
+  db:
+    image: mysql:5.7.22
+    container_name: db
+    restart: unless-stopped
+    tty: true
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_DATABASE: todolist
+      MYSQL_ROOT_PASSWORD: 
+      SERVICE_TAGS: dev
+      SERVICE_NAME: mysql
+    volumes:
+      - dbdata: /var/lib/mysql
+      - ./mysql/my.cnf:/etc/mysql/my.cnf
+    networks:
+      - app-network
+
+
+#Docker Networks
+networks:
+  app-network:
+    driver: bridge
+
+#Volumes
+volumes:
+  dbdata:
+    driver: local
